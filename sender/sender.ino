@@ -149,6 +149,13 @@ void sendCommand(uint8_t targetID, String command) {
   LoRa.endPacket();
 }
 
+void sendCommand(uint8_t targetID, uint8_t command) {
+  LoRa.beginPacket();
+  LoRa.write(targetID);
+  LoRa.print(command);
+  LoRa.endPacket();
+}
+
 void slice_string(String ss){// 수신기에서 받은 값을 
   auto new_device = make_unique<device>();
   
