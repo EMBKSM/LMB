@@ -77,13 +77,6 @@ void setup() {
     for(;;);
   }
   
-  display.clearDisplay();
-  display.setTextColor(WHITE);
-  display.setTextSize(1);
-  display.setCursor(0,0);
-  display.print("LORA SENDER ");
-  display.display();
-  
   Serial.println("LoRa Sender Test");
 
   SPI.begin(SCK, MISO, MOSI, SS);
@@ -95,37 +88,35 @@ void setup() {
   }
 
   Serial.println("LoRa Initializing OK!");
-  display.setCursor(0,10);
-  display.print("LoRa Initializing OK!");
-  display.display();
   delay(2000);
 }
 
 void loop() {
 
   if (digitalRead(CALL_BUTTON) == LOW) {
-    LoRa.beginPacket();
-    LoRa.write(0);
-    LoRa.print(device_id);
-    LoRa.endPacket();
+    sendCommand(0,device_id);// 0번이 통신을 시작하겠다는 소리
   }
   int packetSize = LoRa.parsePacket();
-  if (packetSize) {
-    uint8_t targetID = LoRa.read();
+  if (packetSize) { // 거리 측정을 위한 통신 상태 
+    uint8_t targetID = LoRa.peek();
     if (targetID == device_id) {
+      LoRa.read();
       String datas = LoRa.readString();
       slice_string(datas);
       lastPacketTime = millis();
     }
   }
   if (!select_device.empty() && millis() - lastPacketTime > TIMEOUT) {
-    while (gpsSerial.available() == 0) {
+    if(packetSize){// 아무도 통신 안한 패킷 처리
+      LoRa.readString();
+    }
+    while (gpsSerial.available() == 0) {// GPS 신호를 받을때까지 기다리기
         delay(10);
     }
-    while (gpsSerial.available()) {
+    while (gpsSerial.available()) { // GPS 신호 받기
         gps.encode(gpsSerial.read());
     }
-    if (gps.location.isUpdated()) {
+    if (gps.location.isUpdated()) {// 위도 경도 수신기측에 전달
       display.clearDisplay();
       display.setTextSize(1);
       display.setTextColor(WHITE);
@@ -158,7 +149,7 @@ void sendCommand(uint8_t targetID, String command) {
   LoRa.endPacket();
 }
 
-void slice_string(String ss){
+void slice_string(String ss){// 수신기에서 받은 값을 
   auto new_device = make_unique<device>();
   
   int pos = ss.indexOf(',');
