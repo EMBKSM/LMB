@@ -55,7 +55,6 @@ void loop() {
             LoRa.read();
             int send_device = LoRa.readString().toInt();
             sendRSSI(send_device);
-            sendCommand(0, receivedID);
         } else if (receivedID == device_id) {
             LoRa.read();
             String receivedData = LoRa.readString();

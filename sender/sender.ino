@@ -99,6 +99,7 @@ void loop() {
       String datas = LoRa.readString();
       slice_string(datas);
       lastPacketTime = millis();
+      sendCommand(0, device_id);
     }
   }
 
